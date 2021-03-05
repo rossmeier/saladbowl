@@ -1,0 +1,13 @@
+image: alpine/edge
+packages:
+- go
+sources:
+- https://github.com/veecue/saladbowl
+tasks:
+- check-gen: |
+    cd saladbowl
+    go generate ./...
+    [ "" = "$(git diff)" ]
+- test: |
+    cd saladbowl
+    go test ./...
