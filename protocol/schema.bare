@@ -25,11 +25,11 @@ type WordSuccess {
 }
 
 # Player suggests a word to add to the bowl before the game
-type WordSuggestion {
-    name: string
+type WordSuggestions []{
+    word: string
 }
 
-type ClientToServer (ClientHello | WordSuggestion | WordSuccess)
+type ClientToServer (ClientHello | WordSuggestions | WordSuccess)
 
 # server 2 client messages
 
@@ -45,9 +45,9 @@ type Error {
 
 # New Game status
 enum GameStatus {
-    YourTurn
-    OthersTurn
-    SuggestionPhase
+    Lobby
+    Suggestions
+    Playing
 }
 
 # The info of the other players has changed

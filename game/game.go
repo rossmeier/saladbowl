@@ -39,7 +39,7 @@ func NewGame() *Game {
 		Broker:      message.NewBroker(),
 		bowlFull:    make([]string, 0),
 		bowlCurrent: make([]string, 0),
-		state:       protocol.SuggestionPhase,
+		state:       protocol.Lobby,
 	}
 }
 
@@ -131,7 +131,7 @@ func (g *Game) HandleMessage(msg message.ToServerMsg) error {
 		return g.HandleClientHello(content.(protocol.ClientHello), msg)
 	case protocol.WordSuccess:
 
-	case protocol.WordSuggestion:
+	case protocol.WordSuggestions:
 	}
 	return nil
 }
