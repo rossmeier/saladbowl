@@ -1,0 +1,67 @@
+enum PlayerStatus {
+    Active # it's the player's turn
+    Passive # it's not the player's turn
+    Disconnected
+}
+
+type Player {
+    name: string
+    id: int
+    status: PlayerStatus
+    score: int
+}
+
+# client 2 server messages
+
+# Greeting sent by client, containing optional rejoin token
+type ClientHello {
+    name: string # ignored when a token is given
+    token: optional<string>
+}
+
+# Player has guessed the last word and tells the server to score it
+type WordSuccess {
+    token: string
+}
+
+# Player suggests a word to add to the bowl before the game
+type WordSuggestion {
+    name: string
+}
+
+type ClientToServer (ClientHello | WordSuggestion | WordSuccess)
+
+# server 2 client messages
+
+# New info about the bowl
+type BowlUpdate {
+    total: uint
+    current: uint
+}
+
+type Error {
+    message: string
+}
+
+# New Game status
+enum GameStatus {
+    YourTurn
+    OthersTurn
+    SuggestionPhase
+}
+
+# The info of the other players has changed
+type PlayerList []Player
+
+type ServerHello {
+    token: string
+}
+
+# A word drawn from the bowl
+type WordNew {
+    word: string
+    timeLeft: f64
+    token: string
+}
+
+type ServerToClient (BowlUpdate | Error | GameStatus | PlayerList | ServerHello | WordNew)
