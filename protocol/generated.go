@@ -22,6 +22,20 @@ func (t *Player) Encode() ([]byte, error) {
 	return bare.Marshal(t)
 }
 
+type GameConfig struct {
+	MaxWords       int `bare:"maxWords"`
+	SuggestionTime int `bare:"suggestionTime"`
+	Rounds         int `bare:"rounds"`
+}
+
+func (t *GameConfig) Decode(data []byte) error {
+	return bare.Unmarshal(data, t)
+}
+
+func (t *GameConfig) Encode() ([]byte, error) {
+	return bare.Marshal(t)
+}
+
 type ClientHello struct {
 	Name  string  `bare:"name"`
 	Token *string `bare:"token"`
@@ -32,6 +46,16 @@ func (t *ClientHello) Decode(data []byte) error {
 }
 
 func (t *ClientHello) Encode() ([]byte, error) {
+	return bare.Marshal(t)
+}
+
+type StartGame struct{}
+
+func (t *StartGame) Decode(data []byte) error {
+	return bare.Unmarshal(data, t)
+}
+
+func (t *StartGame) Encode() ([]byte, error) {
 	return bare.Marshal(t)
 }
 
@@ -60,8 +84,8 @@ func (t *WordSuggestions) Encode() ([]byte, error) {
 }
 
 type BowlUpdate struct {
-	Total   uint `bare:"total"`
-	Current uint `bare:"current"`
+	Total   int `bare:"total"`
+	Current int `bare:"current"`
 }
 
 func (t *BowlUpdate) Decode(data []byte) error {
@@ -166,6 +190,8 @@ type ClientToServer interface {
 
 func (_ ClientHello) IsUnion() {}
 
+func (_ StartGame) IsUnion() {}
+
 func (_ WordSuggestions) IsUnion() {}
 
 func (_ WordSuccess) IsUnion() {}
@@ -189,8 +215,9 @@ func (_ WordNew) IsUnion() {}
 func init() {
 	bare.RegisterUnion((*ClientToServer)(nil)).
 		Member(*new(ClientHello), 0).
-		Member(*new(WordSuggestions), 1).
-		Member(*new(WordSuccess), 2)
+		Member(*new(StartGame), 1).
+		Member(*new(WordSuggestions), 2).
+		Member(*new(WordSuccess), 3)
 
 	bare.RegisterUnion((*ServerToClient)(nil)).
 		Member(*new(BowlUpdate), 0).

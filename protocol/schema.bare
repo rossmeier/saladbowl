@@ -11,6 +11,12 @@ type Player {
     score: int
 }
 
+type GameConfig {
+    maxWords: int # Maximum number of words a player can submit
+    suggestionTime: int # Timelimit for the sugesstion phase in seconds
+    rounds: int # Number of rounds to play
+}
+
 # client 2 server messages
 
 # Greeting sent by client, containing optional rejoin token
@@ -18,6 +24,8 @@ type ClientHello {
     name: string # ignored when a token is given
     token: optional<string>
 }
+
+type StartGame void
 
 # Player has guessed the last word and tells the server to score it
 type WordSuccess {
@@ -29,14 +37,14 @@ type WordSuggestions []{
     word: string
 }
 
-type ClientToServer (ClientHello | WordSuggestions | WordSuccess)
+type ClientToServer (ClientHello | StartGame | WordSuggestions | WordSuccess)
 
 # server 2 client messages
 
 # New info about the bowl
 type BowlUpdate {
-    total: uint
-    current: uint
+    total: int
+    current: int
 }
 
 type Error {
