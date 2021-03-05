@@ -47,15 +47,15 @@ func (t *WordSuccess) Encode() ([]byte, error) {
 	return bare.Marshal(t)
 }
 
-type WordSuggestion struct {
-	Name string `bare:"name"`
+type WordSuggestions []struct {
+	Word string `bare:"word"`
 }
 
-func (t *WordSuggestion) Decode(data []byte) error {
+func (t *WordSuggestions) Decode(data []byte) error {
 	return bare.Unmarshal(data, t)
 }
 
-func (t *WordSuggestion) Encode() ([]byte, error) {
+func (t *WordSuggestions) Encode() ([]byte, error) {
 	return bare.Marshal(t)
 }
 
@@ -143,19 +143,19 @@ func (t PlayerStatus) String() string {
 type GameStatus uint
 
 const (
-	YourTurn        GameStatus = 0
-	OthersTurn      GameStatus = 1
-	SuggestionPhase GameStatus = 2
+	Lobby       GameStatus = 0
+	Suggestions GameStatus = 1
+	Playing     GameStatus = 2
 )
 
 func (t GameStatus) String() string {
 	switch t {
-	case YourTurn:
-		return "YourTurn"
-	case OthersTurn:
-		return "OthersTurn"
-	case SuggestionPhase:
-		return "SuggestionPhase"
+	case Lobby:
+		return "Lobby"
+	case Suggestions:
+		return "Suggestions"
+	case Playing:
+		return "Playing"
 	}
 	panic(errors.New("Invalid GameStatus value"))
 }
@@ -166,7 +166,7 @@ type ClientToServer interface {
 
 func (_ ClientHello) IsUnion() {}
 
-func (_ WordSuggestion) IsUnion() {}
+func (_ WordSuggestions) IsUnion() {}
 
 func (_ WordSuccess) IsUnion() {}
 
@@ -189,7 +189,7 @@ func (_ WordNew) IsUnion() {}
 func init() {
 	bare.RegisterUnion((*ClientToServer)(nil)).
 		Member(*new(ClientHello), 0).
-		Member(*new(WordSuggestion), 1).
+		Member(*new(WordSuggestions), 1).
 		Member(*new(WordSuccess), 2)
 
 	bare.RegisterUnion((*ServerToClient)(nil)).
