@@ -115,7 +115,8 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 				p.connection = orig.ClientID
 				p.Status = protocol.Passive
 				orig.Reply(encode(protocol.ServerHello{
-					Token: p.token,
+					Token:    p.token,
+					PlayerID: p.Id,
 				}))
 				g.broadcastPlayerList()
 				return nil
@@ -127,18 +128,24 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 	if err != nil {
 		return fmt.Errorf("Error generating token: %w", err)
 	}
+	team := protocol.Red
+	if rand.Intn(2) == 0 {
+		team = protocol.Blue
+	}
 	g.players = append(g.players, &player{
 		Player: &protocol.Player{
 			Name:   msg.Name,
 			Id:     id,
 			Score:  0,
 			Status: protocol.Passive,
+			Team:   team,
 		},
 		connection: orig.ClientID,
 		token:      token.String(),
 	})
 	orig.Reply(encode(protocol.ServerHello{
-		Token: token.String(),
+		Token:    token.String(),
+		PlayerID: id,
 	}))
 	g.broadcastPlayerList()
 	return nil
@@ -198,6 +205,24 @@ func (g *Game) handleWordSuggestions(msg *protocol.WordSuggestions, orig message
 		Current: bowlSize,
 		Total:   bowlSize,
 	}))
+	return nil
+}
+
+func (g *Game) handleUpdatePlayerInfo(msg *protocol.UpdatePlayerInfo, orig message.ToServerMsg) error {
+	if g.state != protocol.Lobby {
+		return errors.New("Player info can be only changed in lobby")
+	}
+	p := g.getPlayerByClientID(orig.ClientID)
+	if p == nil {
+		return ErrNotJoined
+	}
+	if msg.Name != nil {
+		p.Name = *msg.Name
+	}
+	if msg.Team != nil {
+		p.Team = *msg.Team
+	}
+	g.broadcastPlayerList()
 	return nil
 }
 
