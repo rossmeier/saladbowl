@@ -1,6 +1,7 @@
 package game
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -18,7 +19,7 @@ var (
 )
 
 func encode(msg protocol.ServerToClient) []byte {
-	ret, err := bare.Marshal(msg)
+	ret, err := bare.Marshal(&msg)
 	if err != nil {
 		panic(err)
 	}
@@ -103,7 +104,7 @@ func (g *Game) broadcastPlayerList() {
 	g.Broker.Broadcast(encode(protocol.PlayerList(players)))
 }
 
-func (g *Game) handleClientHello(msg protocol.ClientHello, orig message.ToServerMsg) error {
+func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServerMsg) error {
 	if g.getPlayerByClientID(orig.ClientID) != nil {
 		return errors.New("Client already known")
 	}
@@ -174,7 +175,7 @@ func (g *Game) startRound() {
 	// TODO
 }
 
-func (g *Game) handleWordSuggestions(msg protocol.WordSuggestions, orig message.ToServerMsg) error {
+func (g *Game) handleWordSuggestions(msg *protocol.WordSuggestions, orig message.ToServerMsg) error {
 	if g.state != protocol.Suggestions {
 		return errors.New("Word suggestions can only be submitted during suggestion phase")
 	}
@@ -182,11 +183,11 @@ func (g *Game) handleWordSuggestions(msg protocol.WordSuggestions, orig message.
 	if p == nil {
 		return ErrNotJoined
 	}
-	if len(msg) > int(g.config.MaxWords) {
+	if len(*msg) > int(g.config.MaxWords) {
 		return errors.New("Too many words in the suggestion")
 	}
-	p.words = make([]string, len(msg))
-	for i, sug := range msg {
+	p.words = make([]string, len(*msg))
+	for i, sug := range *msg {
 		p.words[i] = sug.Word
 	}
 	bowlSize := 0
@@ -217,15 +218,19 @@ func (g *Game) handleMessage(msg message.ToServerMsg) error {
 	if err != nil {
 		return err
 	}
-	switch content.(type) {
-	case protocol.ClientHello:
-		return g.handleClientHello(content.(protocol.ClientHello), msg)
-	case protocol.StartGame:
-		return g.handleStartGame(msg)
-	case protocol.WordSuccess:
 
-	case protocol.WordSuggestions:
-		return g.handleWordSuggestions(content.(protocol.WordSuggestions), msg)
+	s, _ := json.MarshalIndent(content, "", "  ")
+	fmt.Println(string(s))
+
+	switch content.(type) {
+	case *protocol.ClientHello:
+		return g.handleClientHello(content.(*protocol.ClientHello), msg)
+	case *protocol.StartGame:
+		return g.handleStartGame(msg)
+	case *protocol.WordSuccess:
+
+	case *protocol.WordSuggestions:
+		return g.handleWordSuggestions(content.(*protocol.WordSuggestions), msg)
 	}
-	return nil
+	return errors.New("Unknown message")
 }

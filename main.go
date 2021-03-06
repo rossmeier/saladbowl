@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/veecue/saladbowl/game"
@@ -23,8 +21,7 @@ func wsHandler(c *gin.Context) {
 	client := current.Broker.RegisterClient()
 	go func() {
 		for msg := range client.Chan() {
-			log.Println("Sending message:", string(msg))
-			con.WriteMessage(websocket.TextMessage, msg)
+			con.WriteMessage(websocket.BinaryMessage, msg)
 		}
 	}()
 	for {
@@ -40,7 +37,6 @@ func wsHandler(c *gin.Context) {
 		case websocket.PingMessage:
 			con.WriteMessage(websocket.PongMessage, message)
 		case websocket.BinaryMessage:
-			//log.Println("Received message", string(message))
 			client.Send(message)
 		}
 	}
@@ -55,7 +51,7 @@ func main() {
 	go current.RunHandler()
 
 	r := gin.Default()
-	r.GET("/ws/", wsHandler)
+	r.GET("/ws", wsHandler)
 	r.GET("/", indexHandler)
 	r.Static("/public", "public")
 	r.Run()
