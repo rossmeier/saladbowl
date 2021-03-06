@@ -18,6 +18,12 @@ var (
 	ErrNotJoined = errors.New("Join the game first")
 )
 
+var DefaultConfig protocol.GameConfig = protocol.GameConfig{
+	MaxWords:       15,
+	Rounds:         3,
+	SuggestionTime: 180,
+}
+
 func encode(msg protocol.ServerToClient) []byte {
 	ret, err := bare.Marshal(&msg)
 	if err != nil {
@@ -46,15 +52,10 @@ type Game struct {
 
 func NewGame() *Game {
 	return &Game{
-		Broker:      message.NewBroker(),
-		bowlFull:    make([]string, 0),
-		bowlCurrent: make([]string, 0),
-		state:       protocol.Lobby,
-		config: protocol.GameConfig{
-			MaxWords:       15,
-			Rounds:         3,
-			SuggestionTime: 180,
-		},
+		Broker: message.NewBroker(),
+		state:  protocol.Lobby,
+		config: DefaultConfig,
+		timer:  make(chan func()),
 	}
 }
 
@@ -135,7 +136,6 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 		},
 		connection: orig.ClientID,
 		token:      token.String(),
-		words:      make([]string, 0),
 	})
 	orig.Reply(encode(protocol.ServerHello{
 		Token: token.String(),
@@ -151,7 +151,7 @@ func (g *Game) enterSuggestions() {
 
 func (g *Game) enterPlaying() {
 	g.state = protocol.Playing
-	g.bowlFull = make([]string, 0)
+	g.bowlFull = g.bowlFull[:0]
 	for _, p := range g.players {
 		g.bowlFull = append(g.bowlFull, p.words...)
 	}
@@ -166,7 +166,7 @@ func (g *Game) broadcastBowlState() {
 }
 
 func (g *Game) startRound() {
-	g.bowlCurrent = make([]string, 0)
+	g.bowlCurrent = g.bowlCurrent[:0]
 	g.bowlCurrent = append(g.bowlCurrent, g.bowlFull...)
 	rand.Shuffle(len(g.bowlCurrent), func(i int, j int) {
 		g.bowlCurrent[i], g.bowlCurrent[j] = g.bowlCurrent[j], g.bowlCurrent[i]
@@ -186,9 +186,9 @@ func (g *Game) handleWordSuggestions(msg *protocol.WordSuggestions, orig message
 	if len(*msg) > int(g.config.MaxWords) {
 		return errors.New("Too many words in the suggestion")
 	}
-	p.words = make([]string, len(*msg))
-	for i, sug := range *msg {
-		p.words[i] = sug.Word
+	p.words = p.words[:0]
+	for _, sug := range *msg {
+		p.words = append(p.words, sug.Word)
 	}
 	bowlSize := 0
 	for _, p := range g.players {
