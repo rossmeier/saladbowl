@@ -1,6 +1,10 @@
 package main
 
 import (
+	"embed"
+	"net/http"
+	"path"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/veecue/saladbowl/game"
@@ -8,6 +12,9 @@ import (
 
 var upgrader = websocket.Upgrader{}
 var current = game.NewGame()
+
+//go:embed public/*
+var publicFiles embed.FS
 
 func wsHandler(c *gin.Context) {
 	if !c.IsWebsocket() {
@@ -46,6 +53,15 @@ func indexHandler(c *gin.Context) {
 
 }
 
+type prefixedFS struct {
+	inner  http.FileSystem
+	prefix string
+}
+
+func (p *prefixedFS) Open(name string) (http.File, error) {
+	return p.inner.Open(path.Join(p.prefix, name))
+}
+
 func main() {
 	// run main game handler in the background
 	go current.RunHandler()
@@ -53,6 +69,6 @@ func main() {
 	r := gin.Default()
 	r.GET("/ws", wsHandler)
 	r.GET("/", indexHandler)
-	r.Static("/public", "public")
+	r.StaticFS("/public/", &prefixedFS{http.FS(publicFiles), "public"})
 	r.Run()
 }

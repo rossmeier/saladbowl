@@ -1,6 +1,6 @@
 module github.com/veecue/saladbowl
 
-go 1.15
+go 1.16
 
 require (
 	git.sr.ht/~sircmpwn/go-bare v0.0.0-20210227202403-5dae5c48f917
