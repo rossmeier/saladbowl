@@ -9,6 +9,7 @@ import (
 
 type Player struct {
 	Name   string       `bare:"name"`
+	Team   Team         `bare:"team"`
 	Id     int          `bare:"id"`
 	Status PlayerStatus `bare:"status"`
 	Score  int          `bare:"score"`
@@ -56,6 +57,19 @@ func (t *StartGame) Decode(data []byte) error {
 }
 
 func (t *StartGame) Encode() ([]byte, error) {
+	return bare.Marshal(t)
+}
+
+type UpdatePlayerInfo struct {
+	Name *string `bare:"name"`
+	Team *Team   `bare:"team"`
+}
+
+func (t *UpdatePlayerInfo) Decode(data []byte) error {
+	return bare.Unmarshal(data, t)
+}
+
+func (t *UpdatePlayerInfo) Encode() ([]byte, error) {
 	return bare.Marshal(t)
 }
 
@@ -119,7 +133,8 @@ func (t *PlayerList) Encode() ([]byte, error) {
 }
 
 type ServerHello struct {
-	Token string `bare:"token"`
+	Token    string `bare:"token"`
+	PlayerID int    `bare:"playerID"`
 }
 
 func (t *ServerHello) Decode(data []byte) error {
@@ -164,6 +179,23 @@ func (t PlayerStatus) String() string {
 	panic(errors.New("Invalid PlayerStatus value"))
 }
 
+type Team uint
+
+const (
+	Red  Team = 0
+	Blue Team = 1
+)
+
+func (t Team) String() string {
+	switch t {
+	case Red:
+		return "Red"
+	case Blue:
+		return "Blue"
+	}
+	panic(errors.New("Invalid Team value"))
+}
+
 type GameStatus uint
 
 const (
@@ -192,6 +224,8 @@ func (_ ClientHello) IsUnion() {}
 
 func (_ StartGame) IsUnion() {}
 
+func (_ UpdatePlayerInfo) IsUnion() {}
+
 func (_ WordSuggestions) IsUnion() {}
 
 func (_ WordSuccess) IsUnion() {}
@@ -216,8 +250,9 @@ func init() {
 	bare.RegisterUnion((*ClientToServer)(nil)).
 		Member(*new(ClientHello), 0).
 		Member(*new(StartGame), 1).
-		Member(*new(WordSuggestions), 2).
-		Member(*new(WordSuccess), 3)
+		Member(*new(UpdatePlayerInfo), 2).
+		Member(*new(WordSuggestions), 3).
+		Member(*new(WordSuccess), 4)
 
 	bare.RegisterUnion((*ServerToClient)(nil)).
 		Member(*new(BowlUpdate), 0).
