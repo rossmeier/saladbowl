@@ -306,6 +306,15 @@ func (g *Game) handleStartGame(orig message.ToServerMsg) error {
 	if g.state != protocol.Lobby {
 		return errors.New("Can only start game from lobby phase")
 	}
+	playersPerTeam := make(map[protocol.Team]int)
+	for _, p := range g.players {
+		playersPerTeam[p.Team]++
+	}
+	for _, team := range []protocol.Team{protocol.Blue, protocol.Red} {
+		if playersPerTeam[team] < 1 {
+			return fmt.Errorf("Too few players in team %s", team.String())
+		}
+	}
 	g.enterSuggestions()
 	return nil
 }
