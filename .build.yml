@@ -5,9 +5,9 @@ sources:
 - https://github.com/veecue/saladbowl
 tasks:
 - check-gen: |
-    cd saladbowl
+    cd saladbowl/server
     go generate ./...
     [ "" = "$(git diff)" ]
 - test: |
-    cd saladbowl
+    cd saladbowl/server
     go test ./...
