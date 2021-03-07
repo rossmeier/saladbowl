@@ -45,7 +45,7 @@ function User(props: { user: UserType }) {
 }
 
 function UsersList(props: { users: UserType[] }) {
-    const items = props.users.map(user => <Grid item><User user={user}/></Grid>)
+    const items = props.users.map(user => <Grid item key={user.id}><User user={user}/></Grid>);
     return <div className="UsersList">
             <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
                 {items}
