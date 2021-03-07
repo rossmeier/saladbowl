@@ -19,15 +19,16 @@ const dummyUser = new Map<number, UserType>([
 
 const host = window.location.hostname
 
-function SaladBowl() {
+function SaladBowl({token: gameToken}: { token?: string | null }) {
 
     const [playerID, setPlayerID] = useState(NaN);
-    const [token, setToken] = useState(sessionStorage.getItem('user-token'));
+    const [token, setToken] = useState(sessionStorage.getItem('userToken'));
     const [users, setUsers] = useState(new Map<number, UserType>());
     const [messageHandler, setMessageHandler] = useState(new Client());
 
     const ws = useWebsocket({
-        socketUrl: `ws://${host}:8080/ws${token ? '/' : ''}${token}`
+        socketUrl: `ws://${host}/ws${gameToken ? '/' : ''}${gameToken}`,
+        retry: 3,
     });
 
     useEffect(() => {
@@ -44,7 +45,7 @@ function SaladBowl() {
 
     useEffect(() => {
         if (token) {
-            sessionStorage.setItem('user-token', token);
+            sessionStorage.setItem('userToken', token);
         }
     }, [token])
 
