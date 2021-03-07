@@ -2,7 +2,7 @@ import {
     Button, Container,
     FormControl,
     FormControlLabel,
-    FormLabel, Grid,
+    FormLabel, Grid, Paper,
     Radio,
     RadioGroup,
     TextField
@@ -29,7 +29,7 @@ function ChooseTeam({disabled, team, teams}: { team: Team, teams: Team[], disabl
 }
 
 function UserLobby(props: { joinGame: (username: string) => void }) {
-    const [name, setName] = useState('');
+    const [name, setName] = useState(sessionStorage.getItem('username') ?? '');
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         setName(event.target.value);
@@ -37,6 +37,7 @@ function UserLobby(props: { joinGame: (username: string) => void }) {
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        sessionStorage.setItem('username', name);
         props.joinGame(name);
     }
 
@@ -89,14 +90,18 @@ function Lobby(props: { user?: UserType, users: UserMapType, joinGame: (name: st
         left = <UserLobby joinGame={props.joinGame}/>
     }
 
-    return <Grid container spacing={2}>
-        <Grid item>
-            <Container>{left}</Container>
-        </Grid>
-        <Grid item>
-            <UsersList users={Array.from(users.values())}/>
-        </Grid>
-    </Grid>
+    return (
+        <Paper>
+            <Grid container spacing={2}>
+                <Grid item>
+                    <Paper><Container>{left}</Container></Paper>
+                </Grid>
+                <Grid item>
+                    <UsersList users={Array.from(users.values())}/>
+                </Grid>
+            </Grid>
+        </Paper>
+    );
 }
 
 export default Lobby;
