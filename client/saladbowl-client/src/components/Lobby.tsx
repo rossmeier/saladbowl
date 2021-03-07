@@ -1,4 +1,12 @@
-import {Button, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, TextField} from "@material-ui/core";
+import {
+    Button, Container,
+    FormControl,
+    FormControlLabel,
+    FormLabel, Grid,
+    Radio,
+    RadioGroup,
+    TextField
+} from "@material-ui/core";
 import React, {useState} from "react";
 import {Team, UserMapType, UsersList, UserType} from "./User";
 
@@ -20,7 +28,7 @@ function ChooseTeam({disabled, team, teams}: { team: Team, teams: Team[], disabl
     </FormControl>
 }
 
-function UserLobby(props: { usersMap: UserMapType, joinGame: (username: string) => void }) {
+function UserLobby(props: { joinGame: (username: string) => void }) {
     const [name, setName] = useState('');
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -33,7 +41,6 @@ function UserLobby(props: { usersMap: UserMapType, joinGame: (username: string) 
     }
 
     return <div className="Lobby UserLobby">
-        <UsersList users={Array.from(props.usersMap.values())}/>
         <form onSubmit={handleSubmit}>
             <TextField id="input-username" label="Username" value={name} required onChange={handleChange}/>
             <br/>
@@ -42,8 +49,8 @@ function UserLobby(props: { usersMap: UserMapType, joinGame: (username: string) 
     </div>
 }
 
-function PlayerLobby(props: { user: UserType, usersMap: UserMapType, teams: Team[] }) {
-    const {user, usersMap, teams} = props;
+function PlayerLobby(props: { user: UserType, teams: Team[] }) {
+    const {user, teams} = props;
 
     const [ready, setReady] = useState(false);
     const [name, setName] = useState(user.name ?? '');
@@ -58,9 +65,7 @@ function PlayerLobby(props: { user: UserType, usersMap: UserMapType, teams: Team
         setName(event.target.value);
     }
 
-    const usersArray = Array.from(usersMap.values()).filter(u => u.id != user.id);
-    return <div className="Lobby PlayerLobby">
-        <UsersList users={usersArray}/>
+    return <div className="PlayerLobby">
         <form onSubmit={handleSubmit}>
             <TextField id="input-username" label="Username" value={name} required onChange={handleNameChange}
                        disabled={ready}/>
@@ -76,12 +81,22 @@ function PlayerLobby(props: { user: UserType, usersMap: UserMapType, teams: Team
 function Lobby(props: { user?: UserType, users: UserMapType, joinGame: (name: string) => void }) {
     const {user, users} = props;
 
+    let left;
     if (user) {
         users.delete(user.id);
-        return <PlayerLobby user={user} usersMap={users} teams={[Team.BLUE, Team.RED]}/>
+        left = <PlayerLobby user={user} teams={[Team.BLUE, Team.RED]}/>
     } else {
-        return <UserLobby usersMap={users} joinGame={props.joinGame}/>
+        left = <UserLobby joinGame={props.joinGame}/>
     }
+
+    return <Grid container spacing={2}>
+        <Grid item>
+            <Container>{left}</Container>
+        </Grid>
+        <Grid item>
+            <UsersList users={Array.from(users.values())}/>
+        </Grid>
+    </Grid>
 }
 
 export default Lobby;
