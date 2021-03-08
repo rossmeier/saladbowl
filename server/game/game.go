@@ -335,7 +335,7 @@ func (g *Game) handleMessage(msg message.ToServerMsg) error {
 	case *protocol.StartGame:
 		return g.handleStartGame(msg)
 	case *protocol.WordSuccess:
-
+		return g.handleWordSuccess(content.(*protocol.WordSuccess), msg)
 	case *protocol.WordSuggestions:
 		return g.handleWordSuggestions(content.(*protocol.WordSuggestions), msg)
 	}
