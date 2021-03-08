@@ -8,7 +8,7 @@ import (
 	"github.com/veecue/saladbowl/game"
 )
 
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{ CheckOrigin: func(r *http.Request) bool { return true },} // TODO this is a temporary fix!!!
 var current = game.NewGame()
 
 func wsHandler(c *gin.Context) {
