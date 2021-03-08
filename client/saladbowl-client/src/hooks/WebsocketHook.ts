@@ -4,10 +4,10 @@ type MessageData = undefined | ArrayBuffer;
 type SendData = string | ArrayBuffer | Blob | ArrayBufferView;
 
 function useWebsocket({
-                              socketUrl,
-                              retry: defaultRetry = 3,
-                              retryInterval = 1500
-                          }: { socketUrl: string, retry?: number, retryInterval?: number }
+                          socketUrl,
+                          retry: defaultRetry = 3,
+                          retryInterval = 1500
+                      }: { socketUrl: string, retry?: number, retryInterval?: number }
 ) {
     const [data, setData]: [MessageData, ((value: (((prevState: MessageData) => MessageData) | MessageData)) => void)] = useState();
 
@@ -15,7 +15,20 @@ function useWebsocket({
 
     const [retry, setRetry] = useState(defaultRetry);
 
-    const [readyState, setReadyState] = useState(false);
+    function reducer(state: { retrying: boolean, ready: boolean }, action: 'retry' | 'connect' | 'close') {
+        switch (action) {
+            case "retry":
+                return {retrying: true, ready: false};
+            case "connect":
+                return {retrying: false, ready: true};
+            case "close":
+                return {retrying: false, ready: false};
+            default:
+                throw Error('Unknown action: ' + action)
+        }
+    }
+
+    const [state, dispatcher] = useReducer(reducer, {retrying: false, ready: false});
 
 
     useEffect(() => {
@@ -23,9 +36,9 @@ function useWebsocket({
         ws.binaryType = 'arraybuffer';
 
         ws.onopen = () => {
-            console.log('Connected to socket');
+            console.log(`Connected to socket. (${ws.url})`);
             clearTimeout(timeout);
-            setReadyState(true);
+            dispatcher('connect');
 
             setSend(() => {
                 return (data: SendData) => {
@@ -42,14 +55,14 @@ function useWebsocket({
 
         let timeout: NodeJS.Timeout;
         ws.onclose = ev => {
-            setReadyState(false);
-
             switch (ev.code) {
                 case 1005:
                 case 1000:
+                    dispatcher('close');
                     console.log('closing connection');
                     break;
                 default:
+                    dispatcher('retry');
                     // retry
                     if (retry > 0) {
                         console.log(`lost connection, trying to reconnect... (remaining: ${retry})`);
@@ -68,7 +81,7 @@ function useWebsocket({
         }
     }, [retry]);
 
-    return {send, data, readyState};
+    return {send, data, ready: state.ready, retrying: state.retrying};
 
 }
 

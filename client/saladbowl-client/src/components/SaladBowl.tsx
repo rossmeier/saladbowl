@@ -1,5 +1,5 @@
 import Lobby from "./Lobby";
-import {PlayerStatus, Team, UserType} from "./User";
+import {UserType} from "./User";
 import {useEffect, useState} from "react";
 import {ClientHello, ClientToServer} from "../protocol/messages";
 import {UnionValue} from "../protocol/bare";
@@ -7,17 +7,19 @@ import Client from "../protocol/MessageHandler";
 import useWebsocket from "../hooks/WebsocketHook";
 
 
-const dummy0 = {name: 'User0', id: 0, team: Team.RED, status: PlayerStatus.ACTIVE, score: 27};
-const dummyUser = new Map<number, UserType>([
-    [0, dummy0],
-    [1, {name: 'User1', id: 1, team: Team.RED, status: PlayerStatus.ACTIVE, score: 27}],
-    [2, {name: 'User2', id: 2, team: Team.RED, status: PlayerStatus.ACTIVE, score: 27}],
-    [3, {name: 'User3', id: 3, team: Team.RED, status: PlayerStatus.ACTIVE, score: 27}],
-    [4, {name: 'User4', id: 4, team: Team.RED, status: PlayerStatus.ACTIVE, score: 27}],
-    [5, {name: 'User5', id: 5, team: Team.RED, status: PlayerStatus.ACTIVE, score: 27}]
-]);
+const dummyUser = new Map<number, UserType>(
+    Array.from([0, 1, 2, 3, 4, 5].map(id => [id, {
+        name: 'User' + id * 3,
+        id: id,
+        team: Math.floor((Math.random() * 10) % 2),
+        status: Math.floor((Math.random() * 10) % 3),
+        score: id * Math.floor(Math.random() * 1000)
+    }]))
+);
 
-const host = window.location.hostname
+const host = window.location.host
+const hostname = window.location.hostname
+const port: number | undefined = 8080;
 
 function SaladBowl({token: gameToken}: { token?: string | null }) {
 
@@ -27,7 +29,7 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
     const [messageHandler, setMessageHandler] = useState(new Client());
 
     const ws = useWebsocket({
-        socketUrl: `ws://${host}/ws${gameToken ? '/' : ''}${gameToken}`,
+        socketUrl: `ws://${port ? hostname : host}${port ? ':' + port : ''}/ws${gameToken ? '/'+gameToken : ''}`,
         retry: 3,
     });
 
@@ -38,10 +40,18 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
     }, [ws.data]);
 
     useEffect(() => {
-        if (!ws.readyState) {
+
+        if (!ws.ready && ws.retrying) {
+            console.log('socket disconnected, reconnecting...');
+            // TODO display info to user
+        } else if (!ws.ready && !ws.retrying) {
             console.log('socket disconnected');
+            // TODO offer user to reconnect.
+        } else {
+            console.log('socket connected');
         }
-    }, [ws.readyState]);
+
+    }, [ws.ready, ws.retrying]);
 
     useEffect(() => {
         if (token) {
