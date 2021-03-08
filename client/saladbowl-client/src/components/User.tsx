@@ -1,4 +1,6 @@
-import {Grid, Paper, Typography} from "@material-ui/core";
+import {Checkbox, FormControlLabel, Grid, Icon, Paper, Typography} from "@material-ui/core";
+import React, {useState} from "react";
+import {Cached, Done, Schedule} from "@material-ui/icons";
 
 enum Team {
     RED,
@@ -23,12 +25,27 @@ type UserType = {
 type UserMapType = Map<userID, UserType>
 
 
-function User(props: { user: UserType }) {
+function UserStatus({status, mapStatus}: { status: PlayerStatus, mapStatus?: (status: PlayerStatus) => JSX.Element }) {
+    function map(status: PlayerStatus): JSX.Element {
+        switch (status) {
+            case PlayerStatus.ACTIVE:
+                return <Done fontSize="small"/>;
+            case PlayerStatus.PASSIVE:
+                return <Schedule fontSize="small"/>;
+            case PlayerStatus.DISCONNECTED:
+                return <Cached fontSize="small"/>;
+        }
+    }
+
+    return mapStatus && mapStatus(status) || map(status);
+}
+
+function User(props: { user: UserType }): JSX.Element {
     const {user} = props;
     return <Paper>
         <Grid container alignItems="center" spacing={1}>
             <Grid item>
-                {user.status}
+                <UserStatus status={user.status}/>
             </Grid>
             <Grid item>
                 <Typography variant="subtitle1">
@@ -37,7 +54,7 @@ function User(props: { user: UserType }) {
             </Grid>
             <Grid item>
                 <Typography variant="subtitle2" color="textSecondary">
-                    Score: {user.score}
+                    {user.score}
                 </Typography>
             </Grid>
         </Grid>
@@ -45,12 +62,22 @@ function User(props: { user: UserType }) {
 }
 
 function UsersList(props: { users: UserType[] }) {
-    const items = props.users.map(user => <Grid item key={user.id}><User user={user}/></Grid>);
+    const [sort, setSort] = useState(false);
+
+    const usersShown = sort ? props.users.slice().sort((a, b) => a.score - b.score) : props.users;
+
+    const items = usersShown.map(user => <Grid item key={user.id}><User user={user}/></Grid>);
+
+    const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSort(event.target.checked);
+    }
     return <div className="UsersList">
-            <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
-                {items}
-            </Grid>
-        </div>
+        <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
+            {items}
+        </Grid>
+        <FormControlLabel control={<Checkbox checked={sort} onChange={handleSortChange} name="sort"/>}
+                          label="Sort by score"/>
+    </div>
 
 }
 
