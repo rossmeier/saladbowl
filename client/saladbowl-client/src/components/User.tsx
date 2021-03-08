@@ -20,6 +20,7 @@ type UserType = {
     id: userID,
     status: PlayerStatus,
     score: number,
+    owner?: boolean,
 }
 
 type UserMapType = Map<userID, UserType>
