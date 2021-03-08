@@ -1,30 +1,41 @@
-import {
-    BowlUpdate,
+import messages, {
+    BowlUpdate, ClientHello,
+    ClientToServer,
+    Error,
     GameStatus,
     PlayerList,
     ServerHello,
-    WordNew,
-    Error,
-    ServerToClient
+    ServerToClient,
+    StartGame, UpdatePlayerInfo,
+    WordNew, WordSuccess, WordSuggestions
 } from "./messages";
+import {PlayerStatus, Team, UserType} from "../components/User";
+import {UnionValue} from "./bare";
 
-enum PlayerStatusValue {
-    ACTIVE,
-    PASSIVE,
-    DISCONNECTED
+interface Message<T> {
+    type: new () => T,
+    value: {}
 }
 
-enum TeamValue {
-    RED,
-    BLUE,
+interface BowlUpdateMessage extends Message<BowlUpdate> {
+    value: { total: BigInt, current: BigInt }
 }
 
 type PlayerValue = {
     name: string,
-    team: TeamValue,
-    id: number,
-    status: PlayerStatusValue,
+    team: Team,
+    id: BigInt,
+    status: PlayerStatus,
     score: number
+}
+
+
+interface PlayerListMessage extends Message<PlayerList> {
+    value: PlayerValue[]
+}
+
+interface ErrorMessage extends Message<Error> {
+    value: { message: string }
 }
 
 enum GameStatusValue {
@@ -33,76 +44,131 @@ enum GameStatusValue {
     PLAYING
 }
 
-type ServerHelloValue = { token: string, playerID: number };
-type BowlUpdateValue = { total: number, current: number };
-type PlayerListValue = PlayerValue[];
-type WordNewValue = { word: string, timeLeft: number, token: string };
-type ErrorValue = { message: string };
+interface GameStatusMessage extends Message<GameStatus> {
+    value: GameStatusValue;
+}
+
+interface ServerHelloMessage extends Message<ServerHello> {
+    value: { token: string, playerID: BigInt }
+}
+
+interface WordNewMessage extends Message<WordNew> {
+    value: { word: string, timeLeft: BigInt, token: string }
+}
+
+type ServerToClientMessage = Message<BowlUpdate | ServerHelloMessage | PlayerListMessage>
+
+function isMessage(message: any) {
+    return 'type' in message && 'value' in message;
+}
+
+function isBowlUpdate(message: any): message is BowlUpdateMessage {
+    return new message.type() instanceof BowlUpdate;
+}
+
+function isError(message: any): message is ErrorMessage {
+    return new message.type() instanceof Error;
+}
+
+function isGameStatus(message: any): message is GameStatusMessage {
+    return new message.type() instanceof GameStatus;
+}
+
+function isPlayerList(message: any): message is PlayerListMessage {
+    return new message.type() instanceof PlayerList;
+}
+
+function isServerHello(message: any): message is ServerHelloMessage {
+    return new message.type() instanceof ServerHello;
+}
+
+function isWordNew(message: any): message is WordNewMessage {
+    return new message.type() instanceof WordNew;
+}
+
 
 type ClientToServerUnion = BowlUpdate | Error | GameStatus | ServerHello | PlayerList | WordNew;
+
+function protoUserToUser(protoUser: PlayerValue): UserType {
+    return {...protoUser, id: Number(protoUser.id), score: Number(protoUser.score),};
+}
 
 class Client {
     onMessage(arraybuffer: ArrayBuffer) {
         const uint8Array = new Uint8Array(arraybuffer);
 
-        const [message, length] = ServerToClient.unpack(uint8Array);
+        // if the unpack call does not fail, bare.js guarantees this returned types.
+        const [msg, length] = ServerToClient.unpack(uint8Array) as [ServerToClientMessage, number];
 
-        console.log(message);
+        console.log(msg);
 
-        const {type, value} = message;
-        if (!type) {
-            console.log('Message type is not defined');
-            return;
-        }
-
-        if (!value) {
-            console.log('Message value is not defined');
-            return;
-        }
-
-        const clazz: ClientToServerUnion = new type();
-
-        if (clazz instanceof BowlUpdate) {
-            this.onBowlUpdate(value);
-        } else if (clazz instanceof Error) {
-            this.onError(value);
-        } else if (clazz instanceof GameStatus) {
-            this.onGameStatus(value)
-        } else if (clazz instanceof PlayerList) {
-            this.onPlayerList(value);
-        } else if (clazz instanceof ServerHello) {
-            this.onServerHello(value);
-        } else if (clazz instanceof WordNew) {
-            this.onWordNew(value);
+        if (isBowlUpdate(msg)) {
+            const total = Number(msg.value.total);
+            const current = Number(msg.value.current)
+            this.onBowlUpdate({current, total});
+        } else if (isError(msg)) {
+            this.onError(msg.value);
+        } else if (isGameStatus(msg)) {
+            this.onGameStatus(msg.value)
+        } else if (isPlayerList(msg)) {
+            const users = msg.value.map(user => protoUserToUser(user));
+            this.onPlayerList(users);
+        } else if (isServerHello(msg)) {
+            const playerID = Number(msg.value.playerID);
+            this.onServerHello({...msg.value, playerID});
+        } else if (isWordNew(msg)) {
+            const timeLeft = Number(msg.value.timeLeft)
+            this.onWordNew({...msg.value, timeLeft});
         } else {
-            console.warn('Unknown class: ' + type);
+            console.warn('Unknown message: ' + msg);
         }
     }
 
-    onBowlUpdate(value: BowlUpdateValue) {
-
+    onBowlUpdate(value: { total: number, current: number }) {
+        console.warn('received onBowlUpdate, but onBowlUpdate')
     }
 
-    onError(value: ErrorValue) {
-
+    onError(value: { message: string }) {
+        console.warn('received Error, but onError not assigned');
     }
 
     onGameStatus(value: GameStatusValue) {
-
+        console.warn('received Error, but onGameStatus not assigned');
     }
 
-    onPlayerList(value: PlayerListValue) {
-
+    onPlayerList(value: UserType[]) {
+        console.warn('received Error, but onPlayerListr not assigned');
     }
 
 
-    onServerHello(value: ServerHelloValue) {
-
+    onServerHello(value: { token: string, playerID: number }) {
+        console.warn('received Error, but onServerHello not assigned');
     }
 
-    onWordNew(value: WordNewValue) {
-
+    onWordNew(value: { word: string, timeLeft: number, token: string }) {
+        console.warn('received Error, but onWordNew not assigned');
     }
+
+    clientHello(name: string, token?: string): Uint8Array {
+        return ClientToServer.pack(new UnionValue(ClientHello, {name, token}));
+    }
+
+    startGame(): Uint8Array {
+        return ClientToServer.pack(new UnionValue(StartGame, {}));
+    }
+
+    updatePlayerInfo(name?: string, team?: Team): Uint8Array {
+        return ClientToServer.pack(new UnionValue(UpdatePlayerInfo, {name, team}))
+    }
+
+    wordSuggestions(words: {word: string}[]): Uint8Array {
+        return ClientToServer.pack(new UnionValue(WordSuggestions, words));
+    }
+
+    wordSuccess(token: string){
+        return ClientToServer.pack(new UnionValue(WordSuccess, {token}));
+    }
+
 }
 
 export default Client;
