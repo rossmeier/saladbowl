@@ -1,13 +1,13 @@
-import React, {useState} from 'react';
-import logo from './logo.svg';
+import React from 'react';
 import './App.css';
 import SaladBowl from "./components/SaladBowl";
+import {Container} from "@material-ui/core";
 
 function App() {
     return (
-        <div className="App">
+        <Container className="App">
             <SaladBowl/>
-        </div>
+        </Container>
     );
 }
 
