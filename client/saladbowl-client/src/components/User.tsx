@@ -1,4 +1,4 @@
-import {Checkbox, FormControlLabel, Grid, Icon, Paper, Typography} from "@material-ui/core";
+import {Checkbox, FormControlLabel, Grid, Paper, Typography} from "@material-ui/core";
 import React, {useState} from "react";
 import {Cached, Done, Schedule} from "@material-ui/icons";
 
@@ -38,7 +38,7 @@ function UserStatus({status, mapStatus}: { status: PlayerStatus, mapStatus?: (st
         }
     }
 
-    return mapStatus && mapStatus(status) || map(status);
+    return mapStatus ? mapStatus(status) : map(status);
 }
 
 function User(props: { user: UserType }): JSX.Element {
@@ -72,13 +72,18 @@ function UsersList(props: { users: UserType[] }) {
     const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSort(event.target.checked);
     }
-    return <div className="UsersList">
-        <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
-            {items}
-        </Grid>
-        <FormControlLabel control={<Checkbox checked={sort} onChange={handleSortChange} name="sort"/>}
-                          label="Sort by score"/>
-    </div>
+    if (props.users.length <= 0) {
+        return null
+    } else {
+        return <div className="UsersList">
+            <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
+                {items}
+            </Grid>
+            {props.users.length > 0 ?
+                <FormControlLabel control={<Checkbox checked={sort} onChange={handleSortChange} name="sort"/>}
+                                  label="Sort by score"/> : null}
+        </div>
+    }
 
 }
 
