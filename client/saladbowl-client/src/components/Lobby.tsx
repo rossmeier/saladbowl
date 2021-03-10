@@ -39,19 +39,17 @@ function UserLobby(props: { joinGame: (username: string) => void }) {
     </div>
 }
 
-function ChooseTeam({disabled, team, teams}: { team: Team, teams: Team[], disabled?: boolean, }) {
-    const [value, setValue] = useState(team);
-
+function ChooseTeam({disabled, team, teams, onTeamChange}: { team: Team, teams: Team[], disabled?: boolean, onTeamChange: (team: Team) =>  void}) {
     const buttons = teams.map(team => <FormControlLabel key={team} value={team} control={<Radio/>} label={Team[team]}
                                                         disabled={disabled} labelPlacement="bottom"/>)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(parseInt(event.target.value));
+        onTeamChange(parseInt(event.target.value));
     }
 
     return <FormControl component="fieldset">
         <FormLabel component="legend">Team</FormLabel>
-        <RadioGroup row arial-label="team" name="team" value={value} onChange={handleChange}>
+        <RadioGroup row arial-label="team" name="team" value={team} onChange={handleChange}>
             {buttons}
         </RadioGroup>
     </FormControl>
@@ -62,10 +60,11 @@ function PlayerConfig(props: { user: UserType, teams: Team[], onReady: (name: st
 
     const [ready, setReady] = useState(user.name !== undefined && user.team !== undefined);
     const [name, setName] = useState(user.name ?? '');
+    const [team, setTeam] = useState(user.team);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!ready) props.onReady(name, user.team);
+        if (!ready) props.onReady(name, team);
         setReady(!ready);
     }
 
@@ -83,7 +82,7 @@ function PlayerConfig(props: { user: UserType, teams: Team[], onReady: (name: st
                                    required disabled={ready}/>
                     </Grid>
                     <Grid item>
-                        <ChooseTeam team={user.team} teams={teams} disabled/>
+                        <ChooseTeam team={team} teams={teams} onTeamChange={setTeam} disabled={ready}/>
                     </Grid>
                     <Grid item>
                         <Button type="submit">{ready ? "Edit" : "Ready"}</Button>
