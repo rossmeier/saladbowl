@@ -65,7 +65,7 @@ function PlayerConfig(props: { user: UserType, teams: Team[], onReady: (name: st
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (ready) props.onReady(name, user.team);
+        if (!ready) props.onReady(name, user.team);
         setReady(!ready);
     }
 
