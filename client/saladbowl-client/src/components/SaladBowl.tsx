@@ -9,12 +9,19 @@ const host = window.location.host
 const hostname = window.location.hostname
 const port: number | undefined = 8080;
 
+enum SaladBowlStatus {
+    LOBBY = 0,
+    SUGGESTION = 1,
+    PLAYING = 2
+}
+
 function SaladBowl({token: gameToken}: { token?: string | null }) {
 
     const [playerID, setPlayerID] = useState(parseInt(sessionStorage.getItem('playerID') ?? ''));
     const [token, setToken] = useState(sessionStorage.getItem('userToken'));
     const [users, setUsers] = useState(new Map<number, UserType>());
     const [messageHandler, setMessageHandler] = useState(new Client());
+    const [status, setStatus] = useState(SaladBowlStatus.LOBBY);
 
     const ws = useWebsocket({
         socketUrl: `ws://${port ? hostname : host}${port ? ':' + port : ''}/ws${gameToken ? '/' + gameToken : ''}`,
@@ -62,6 +69,10 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
             const newUser: [number, any][] = value.map(user => [user.id, user]);
             setUsers(users => new Map(newUser));
         }
+        messageHandler.onGameStatus = value => {
+            console.log('Received GameStatus ' + value);
+            setStatus(value);
+        }
     }, [messageHandler]);
 
     useEffect(() => {
@@ -98,12 +109,22 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
     }
     const user = users.get(playerID);
 
-    return <div className="SaladBowl">
-        <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame} onReady={updatePlayerInfo}
-               onConfigSubmit={updateGameConfig}/>
-    </div>
+    let content = null;
+    switch (status) {
+        case SaladBowlStatus.LOBBY:
+            content = <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame}
+                             onReady={updatePlayerInfo}
+                             onConfigSubmit={updateGameConfig}/>
+            break;
+        case SaladBowlStatus.SUGGESTION:
+            break;
+        case SaladBowlStatus.PLAYING:
+            break;
+    }
+
+    return <div className="SaladBowl">{content}</div>
 }
 
 export default SaladBowl
 
-export {SaladBowl}
+export {SaladBowl, SaladBowlStatus}
