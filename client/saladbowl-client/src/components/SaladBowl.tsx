@@ -64,6 +64,20 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
         }
     }, [messageHandler]);
 
+    useEffect(() => {
+        if (!playerID) return
+        const _user = users.get(playerID);
+
+        if (!_user && token) {
+            const _name = sessionStorage.getItem('username');
+            console.log(playerID, _user, token, _name);
+
+            if (_name) {
+                joinGame(_name);
+            }
+        }
+    }, []);
+
     const joinGame = (name: string) => {
         console.log('joining game as user ' + name);
         ws.send(messageHandler.clientHello(name, token ?? undefined));
@@ -85,7 +99,8 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
     const user = users.get(playerID);
 
     return <div className="SaladBowl">
-        <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame} onReady={updatePlayerInfo} onConfigSubmit={updateGameConfig}/>
+        <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame} onReady={updatePlayerInfo}
+               onConfigSubmit={updateGameConfig}/>
     </div>
 }
 

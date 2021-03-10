@@ -35,9 +35,9 @@ function parseJSON(json) {
 		(key, value) => typeof value === 'string' && BIGINT_PATTERN.test(value) ? BigInt(value.slice(0, -1)) : value);
 }
 
-const MAX_U32 = 2n ** 32n - 1n;
-const MAX_U53 = 2n ** 53n - 1n; // same as Number.MAX_SAFE_INTEGER
-const MAX_U64 = 2n ** 64n - 1n;
+const MAX_U32 = 4294967295n // 2n ** 32n - 1n;
+const MAX_U53 = 9007199254740991n// 2n ** 53n - 1n; // same as Number.MAX_SAFE_INTEGER
+const MAX_U64 = 18446744073709551615n// 2n ** 64n - 1n;
 
 // this is the maximum string length in spec,
 // some browsers support less (eg. firefox with 2^30 - 2)
