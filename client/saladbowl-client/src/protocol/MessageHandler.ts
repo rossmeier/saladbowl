@@ -155,7 +155,7 @@ class Client {
     }
 
     startGame(): Uint8Array {
-        return ClientToServer.pack(new UnionValue(StartGame, {}));
+        return ClientToServer.pack(new UnionValue(StartGame));
     }
 
     updatePlayerInfo(name?: string, team?: Team): Uint8Array {
