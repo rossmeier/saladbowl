@@ -1,3 +1,5 @@
+// +build !noembed
+
 package main
 
 import (
