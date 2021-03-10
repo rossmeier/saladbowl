@@ -44,6 +44,10 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
             // TODO offer user to reconnect.
         } else {
             console.log('socket connected');
+            const _username = sessionStorage.getItem('username');
+            if (_username){
+                joinGame(_username);
+            }
         }
 
     }, [ws.ready, ws.retrying]);
@@ -74,20 +78,6 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
             setStatus(value);
         }
     }, [messageHandler]);
-
-    useEffect(() => {
-        if (!playerID) return
-        const _user = users.get(playerID);
-
-        if (!_user && token) {
-            const _name = sessionStorage.getItem('username');
-            console.log(playerID, _user, token, _name);
-
-            if (_name) {
-                joinGame(_name);
-            }
-        }
-    }, []);
 
     const joinGame = (name: string) => {
         console.log('joining game as user ' + name);

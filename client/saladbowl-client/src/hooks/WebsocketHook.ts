@@ -30,7 +30,6 @@ function useWebsocket({
 
     const [state, dispatcher] = useReducer(reducer, {retrying: false, ready: false});
 
-
     useEffect(() => {
         const ws = new WebSocket(socketUrl);
         ws.binaryType = 'arraybuffer';
@@ -38,7 +37,6 @@ function useWebsocket({
         ws.onopen = () => {
             console.log(`Connected to socket. (${ws.url})`);
             clearTimeout(timeout);
-            dispatcher('connect');
 
             setSend(() => {
                 return (data: SendData) => {
@@ -46,6 +44,7 @@ function useWebsocket({
                     return undefined;
                 };
             });
+            dispatcher('connect');
         }
 
         ws.onmessage = ev => {
