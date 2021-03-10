@@ -217,7 +217,6 @@ function Lobby(props: { user?: UserType, users: UserMapType, joinGame: (name: st
 
     let left;
     if (user) {
-        users.delete(user.id);
         left = <PlayerLobby user={user} teams={[Team.BLUE, Team.RED]} onReady={onReady} onStart={onStart}
                             onConfigSubmit={onConfigSubmit}/>
     } else {
@@ -233,7 +232,7 @@ function Lobby(props: { user?: UserType, users: UserMapType, joinGame: (name: st
                 <Grid item>
                     <Paper>
                         <Typography variant="subtitle2">Players</Typography>
-                        <UsersList users={Array.from(users.values())}/>
+                        <UsersList users={Array.from(users.values())} meID={user?.id}/>
                     </Paper>
                 </Grid>
             </Grid>

@@ -1,6 +1,6 @@
 import {Checkbox, FormControlLabel, Grid, Paper, Typography} from "@material-ui/core";
 import React, {useState} from "react";
-import {Cached, Done, Schedule} from "@material-ui/icons";
+import {Cached, Done, Face, Schedule} from "@material-ui/icons";
 
 enum Team {
     RED,
@@ -41,12 +41,12 @@ function UserStatus({status, mapStatus}: { status: PlayerStatus, mapStatus?: (st
     return mapStatus ? mapStatus(status) : map(status);
 }
 
-function User(props: { user: UserType }): JSX.Element {
+function User(props: { user: UserType, me?: boolean }): JSX.Element {
     const {user} = props;
     return <Paper>
         <Grid container alignItems="center" spacing={1}>
             <Grid item>
-                <UserStatus status={user.status}/>
+                {props.me ? <Face fontSize="small"/> : null}
             </Grid>
             <Grid item>
                 <Typography variant="subtitle1">
@@ -58,29 +58,35 @@ function User(props: { user: UserType }): JSX.Element {
                     {user.score}
                 </Typography>
             </Grid>
+            <Grid item>
+                <Typography variant="subtitle2" color="textSecondary">
+                    {Team[user.team]}
+                </Typography>
+            </Grid>
+            <Grid item>
+                <UserStatus status={user.status}/>
+            </Grid>
         </Grid>
     </Paper>
 }
 
-function UsersList(props: { users: UserType[] }) {
+function UsersList(props: { users: UserType[], meID?: number }) {
     const [sort, setSort] = useState(false);
 
-    const usersShown = sort ? props.users.slice().sort((a, b) => a.score - b.score) : props.users;
+    const {users, meID} = props;
+    const usersShown = sort ? users.slice().sort((a, b) => a.score - b.score) : users;
 
-    const items = usersShown.map(user => <Grid item key={user.id}><User user={user}/></Grid>);
+    const items = usersShown.map(user => <Grid item key={user.id}><User user={user} me={user.id === meID}/></Grid>);
 
-    const handleSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSort(event.target.checked);
-    }
-    if (props.users.length <= 0) {
+    if (users.length <= 0) {
         return null
     } else {
         return <div className="UsersList">
             <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
                 {items}
             </Grid>
-            {props.users.length > 0 ?
-                <FormControlLabel control={<Checkbox checked={sort} onChange={handleSortChange} name="sort"/>}
+            {users.length > 0 ?
+                <FormControlLabel control={<Checkbox checked={sort} onChange={() => setSort(!sort)} name="sort"/>}
                                   label="Sort by score"/> : null}
         </div>
     }

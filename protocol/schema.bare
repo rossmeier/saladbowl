@@ -19,7 +19,7 @@ type Player {
 
 type GameConfig {
     maxWords: int # Maximum number of words a player can submit
-    suggestionTime: int # Timelimit for the sugesstion phase in seconds
+    suggestionTime: int # time limit for the suggestion phase in seconds
     rounds: int # Number of rounds to play
 }
 
@@ -35,6 +35,7 @@ type StartGame void
 
 # Can only be sent during lobby phase
 type UpdatePlayerInfo {
+    token: string # usertoken to identify the user
     name: optional<string> # when given, change the player's name
     team: optional<Team> # when given, change the player's team
 }
