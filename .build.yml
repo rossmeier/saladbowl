@@ -1,13 +1,20 @@
 image: alpine/edge
 packages:
 - go
+- yarn
 sources:
 - https://github.com/veecue/saladbowl
 tasks:
-- check-gen: |
+- build-client: |
+    cd saladbowl/client/saladbowl-client
+    yarn
+    yarn run build
+    cp -r build/* ../../server/public
+- build-server: |
     cd saladbowl/server
     go generate ./...
     [ "" = "$(git diff)" ]
+    go build -o ../saladbowl
 - test: |
     cd saladbowl/server
     go test ./...
