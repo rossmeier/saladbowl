@@ -120,6 +120,10 @@ func (g *Game) broadcastPlayerList() {
 	g.Broker.Broadcast(encode(protocol.PlayerList(players)))
 }
 
+func (g *Game) broadcastGameState() {
+	g.Broker.Broadcast(encode(g.state))
+}
+
 func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServerMsg) error {
 	if g.getPlayerByClientID(orig.ClientID) != nil {
 		return errors.New("Client already known")
@@ -165,11 +169,13 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 
 func (g *Game) enterSuggestions() {
 	g.state = protocol.Suggestions
+	g.broadcastGameState()
 	g.setTimer(time.Duration(g.config.SuggestionTime)*time.Second, g.enterPlaying)
 }
 
 func (g *Game) enterPlaying() {
 	g.state = protocol.Playing
+	g.broadcastGameState()
 	g.bowlFull = g.bowlFull[:0]
 	for _, p := range g.players {
 		g.bowlFull = append(g.bowlFull, p.words...)
