@@ -109,7 +109,7 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
     }
     const user = users.get(playerID);
 
-    let content = null;
+    let content = <div>GameState {SaladBowlStatus[status]} not yet implemented.</div>;
     switch (status) {
         case SaladBowlStatus.LOBBY:
             content = <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame}
