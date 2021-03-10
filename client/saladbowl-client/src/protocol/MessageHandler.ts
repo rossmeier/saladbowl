@@ -11,6 +11,7 @@ import messages, {
 } from "./messages";
 import {PlayerStatus, Team, UserType} from "../components/User";
 import {UnionValue} from "./bare";
+import {SaladBowlStatus} from "../components/SaladBowl";
 
 interface Message<T> {
     type: new () => T,
@@ -109,7 +110,7 @@ class Client {
         } else if (isError(msg)) {
             this.onError(msg.value);
         } else if (isGameStatus(msg)) {
-            this.onGameStatus(msg.value)
+            this.onGameStatus(msg.value as any); // TODO handle conversion properly
         } else if (isPlayerList(msg)) {
             const users = msg.value.map(user => protoUserToUser(user));
             this.onPlayerList(users);
@@ -132,7 +133,7 @@ class Client {
         console.warn('received Error, but onError not assigned');
     }
 
-    onGameStatus(value: GameStatusValue) {
+    onGameStatus(value: SaladBowlStatus) {
         console.warn('received Error, but onGameStatus not assigned');
     }
 

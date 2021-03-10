@@ -39,7 +39,12 @@ function UserLobby(props: { joinGame: (username: string) => void }) {
     </div>
 }
 
-function ChooseTeam({disabled, team, teams, onTeamChange}: { team: Team, teams: Team[], disabled?: boolean, onTeamChange: (team: Team) =>  void}) {
+function ChooseTeam({
+                        disabled,
+                        team,
+                        teams,
+                        onTeamChange
+                    }: { team: Team, teams: Team[], disabled?: boolean, onTeamChange: (team: Team) => void }) {
     const buttons = teams.map(team => <FormControlLabel key={team} value={team} control={<Radio/>} label={Team[team]}
                                                         disabled={disabled} labelPlacement="bottom"/>)
 
@@ -183,6 +188,10 @@ function GameConfig(props: { defaults: { maxWords: number, suggestionTime: numbe
 function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: string, team: Team) => void, onStart: () => void, onConfigSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
     const {user, teams} = props;
 
+    const handleStart = () => {
+        // TODO get config values and update them before game start?
+        props.onStart()
+    }
     return (
         <Box>
             <Typography variant="subtitle1">Lobby</Typography>
@@ -197,7 +206,7 @@ function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: str
                         <PlayerConfig user={user} teams={teams} onReady={props.onReady}/>
                     </Paper>
                 </Grid>
-                <Button>StartGame</Button>
+                <Button onClick={handleStart}>StartGame</Button>
             </Grid>
         </Box>
     );
