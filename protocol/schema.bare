@@ -35,7 +35,6 @@ type StartGame void
 
 # Can only be sent during lobby phase
 type UpdatePlayerInfo {
-    token: string # usertoken to identify the user
     name: optional<string> # when given, change the player's name
     team: optional<Team> # when given, change the player's team
 }
