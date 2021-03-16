@@ -3,6 +3,8 @@ import {Team, UserType} from "./User";
 import {useEffect, useState} from "react";
 import Client from "../protocol/MessageHandler";
 import useWebsocket from "../hooks/WebsocketHook";
+import {GameStatus} from "../protocol/messages";
+import SuggestionPhase from "./SuggestionPhase";
 
 
 const host = window.location.host
@@ -12,7 +14,8 @@ const port: number | undefined = 8080;
 enum SaladBowlStatus {
     LOBBY = 0,
     SUGGESTION = 1,
-    PLAYING = 2
+    PLAYING = 2,
+    NONE
 }
 
 function SaladBowl({token: gameToken}: { token?: string | null }) {
@@ -97,9 +100,14 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
         console.log('send start game');
         ws.send(messageHandler.startGame());
     }
+    const suggestWords = (words: string[]) => {
+        console.log('suggesting words');
+        ws.send(messageHandler.wordSuggestions(words));
+    }
+
     const user = users.get(playerID);
 
-    let content = <div>GameState {SaladBowlStatus[status]} not yet implemented.</div>;
+    let content;
     switch (status) {
         case SaladBowlStatus.LOBBY:
             content = <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame}
@@ -107,9 +115,11 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
                              onConfigSubmit={updateGameConfig}/>
             break;
         case SaladBowlStatus.SUGGESTION:
+            content = <SuggestionPhase users={Array.from(users.values())} sendWords={suggestWords}/>
             break;
-        case SaladBowlStatus.PLAYING:
-            break;
+
+        default:
+                content = <div>GameStatus: {SaladBowlStatus[status]} not implemented</div>;
     }
 
     return <div className="SaladBowl">{content}</div>

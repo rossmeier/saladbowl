@@ -162,11 +162,13 @@ class Client {
         return ClientToServer.pack(new UnionValue(UpdatePlayerInfo, {name, team}))
     }
 
-    wordSuggestions(words: {word: string}[]): Uint8Array {
-        return ClientToServer.pack(new UnionValue(WordSuggestions, words));
+    wordSuggestions(words: string[]): Uint8Array {
+        return ClientToServer.pack(new UnionValue(WordSuggestions, words.map(w => {
+            return {word: w};
+        })));
     }
 
-    wordSuccess(token: string){
+    wordSuccess(token: string) {
         return ClientToServer.pack(new UnionValue(WordSuccess, {token}));
     }
 
