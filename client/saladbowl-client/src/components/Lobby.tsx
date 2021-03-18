@@ -1,7 +1,6 @@
 import {
     Box,
     Button,
-    Container,
     FormControl,
     FormControlLabel,
     FormLabel,
@@ -14,7 +13,7 @@ import {
     Typography
 } from "@material-ui/core";
 import React, {useReducer, useState} from "react";
-import {Team, UserMapType, UsersList, UserType} from "./User";
+import {Team, UserType} from "./User";
 
 
 function UserLobby(props: { joinGame: (username: string) => void }) {
@@ -60,21 +59,16 @@ function ChooseTeam({
     </FormControl>
 }
 
-function PlayerConfig(props: { user: UserType, teams: Team[], onReady: (name: string, team: Team) => void }) {
-    const {user, teams} = props;
-
-    const [ready, setReady] = useState(user.name !== undefined && user.team !== undefined);
-    const [name, setName] = useState(user.name ?? '');
-    const [team, setTeam] = useState(user.team);
+function PlayerConfig(props: { name: string, team: Team, teams: Team[], ready: boolean, onReady: () => void, onNameChange: (name: string) => void, onTeamChange: (team: Team) => void }) {
+    const {name, ready, team, teams} = props;
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!ready) props.onReady(name, team);
-        setReady(!ready);
+        props.onReady();
     }
 
     const handleNameChange = (event: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-        setName(event.target.value);
+        props.onNameChange(event.target.value);
     }
 
     return (
@@ -87,7 +81,7 @@ function PlayerConfig(props: { user: UserType, teams: Team[], onReady: (name: st
                                    required disabled={ready}/>
                     </Grid>
                     <Grid item>
-                        <ChooseTeam team={team} teams={teams} onTeamChange={setTeam} disabled={ready}/>
+                        <ChooseTeam team={team} teams={teams} onTeamChange={props.onTeamChange} disabled={ready}/>
                     </Grid>
                     <Grid item>
                         <Button type="submit">{ready ? "Edit" : "Ready"}</Button>
@@ -188,22 +182,38 @@ function GameConfig(props: { defaults: { maxWords: number, suggestionTime: numbe
 function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: string, team: Team) => void, onStart: () => void, onConfigSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
     const {user, teams} = props;
 
+    const [ready, setReady] = useState(user.name !== undefined && user.team !== undefined);
+    const [name, setName] = useState(user.name ?? '');
+    const [team, setTeam] = useState(user.team);
+
     const handleStart = () => {
-        // TODO get config values and update them before game start?
+        handleUserConfigReady();
         props.onStart()
     }
+
+    function handleUserConfigReady() {
+        if (!ready) {
+            props.onReady(name, team);
+        }
+        setReady(!ready);
+    }
+
     return (
         <Box>
             <Typography variant="subtitle1">Lobby</Typography>
             <Grid container className="PlayerLobby" direction="column" spacing={2}>
-                <Grid item>
-                    {user.owner ?
+                {user.owner ?
+                    <Grid item>
                         <GameConfig defaults={{guessingTime: 30, maxWords: 15, suggestionTime: 180, rounds: 3}}
-                                    onSubmit={props.onConfigSubmit}/> : null}
-                </Grid>
+                                    onSubmit={props.onConfigSubmit}/>
+                    </Grid> :
+                    null
+                }
                 <Grid item>
                     <Paper>
-                        <PlayerConfig user={user} teams={teams} onReady={props.onReady}/>
+                        <PlayerConfig name={name} team={team} teams={teams} ready={ready}
+                                      onReady={handleUserConfigReady} onNameChange={setName} onTeamChange={setTeam}
+                        />
                     </Paper>
                 </Grid>
                 <Button onClick={handleStart}>StartGame</Button>
@@ -212,32 +222,15 @@ function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: str
     );
 }
 
-function Lobby(props: { user?: UserType, users: UserMapType, joinGame: (name: string) => void, onReady: (name: string, team: Team) => void, onStart: () => void, onConfigSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
-    const {user, users, joinGame, onReady, onStart, onConfigSubmit} = props;
+function Lobby(props: { user?: UserType, joinGame: (name: string) => void, onReady: (name: string, team: Team) => void, onStart: () => void, onConfigSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
+    const {user, joinGame, onReady, onStart, onConfigSubmit} = props;
 
-    let left;
     if (user) {
-        left = <PlayerLobby user={user} teams={[Team.BLUE, Team.RED]} onReady={onReady} onStart={onStart}
+        return <PlayerLobby user={user} teams={[Team.BLUE, Team.RED]} onReady={onReady} onStart={onStart}
                             onConfigSubmit={onConfigSubmit}/>
     } else {
-        left = <UserLobby joinGame={joinGame}/>
+        return <UserLobby joinGame={joinGame}/>
     }
-
-    return (
-        <Paper>
-            <Grid container spacing={2}>
-                <Grid item>
-                    <Container>{left}</Container>
-                </Grid>
-                <Grid item>
-                    <Paper>
-                        <Typography variant="subtitle2">Players</Typography>
-                        <UsersList users={Array.from(users.values())} meID={user?.id}/>
-                    </Paper>
-                </Grid>
-            </Grid>
-        </Paper>
-    );
 }
 
 export default Lobby;
