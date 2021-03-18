@@ -1,10 +1,11 @@
 import Lobby from "./Lobby";
-import {Team, UserType} from "./User";
+import {Team, UsersList, UserType} from "./User";
 import {useEffect, useState} from "react";
 import Client from "../protocol/MessageHandler";
 import useWebsocket from "../hooks/WebsocketHook";
-import {GameStatus} from "../protocol/messages";
 import SuggestionPhase from "./SuggestionPhase";
+import PlayingPhase from "./PlayingPhase";
+import {Container, Grid, Paper, Typography} from "@material-ui/core";
 
 
 const host = window.location.host
@@ -25,6 +26,8 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
     const [users, setUsers] = useState(new Map<number, UserType>());
     const [messageHandler, setMessageHandler] = useState(new Client());
     const [status, setStatus] = useState(SaladBowlStatus.LOBBY);
+    const [wordNew, setWordNew] = useState({word: '', timeLeft: 0, token: ''});
+    const [bowlUpdate, setBowlUpdate] = useState({current: -1, total: -1});
 
     const ws = useWebsocket({
         socketUrl: `ws://${port ? hostname : host}${port ? ':' + port : ''}/ws${gameToken ? '/' + gameToken : ''}`,
@@ -48,7 +51,7 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
         } else {
             console.log('socket connected');
             const _username = sessionStorage.getItem('username');
-            if (_username){
+            if (_username) {
                 joinGame(_username);
             }
         }
@@ -79,7 +82,21 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
         messageHandler.onGameStatus = value => {
             console.log('Received GameStatus ' + value);
             setStatus(value);
+        };
+        messageHandler.onWordNew = value => {
+            console.log('Received WordNew ' + JSON.stringify(value));
+            setWordNew(old => {
+                return {...old, ...value}
+            });
         }
+        messageHandler.onBowlUpdate = value => {
+            console.log('Received BowlUpdate ' + JSON.stringify(value));
+            setBowlUpdate(old => {
+                return {...old, ...value}
+            });
+        }
+
+
     }, [messageHandler]);
 
     const joinGame = (name: string) => {
@@ -104,22 +121,31 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
         console.log('suggesting words');
         ws.send(messageHandler.wordSuggestions(words));
     }
+    const wordSuccess = () => {
+        console.log('sending wordSuccess')
+        ws.send(messageHandler.wordSuccess(wordNew.token));
+    }
 
     const user = users.get(playerID);
 
     let content;
     switch (status) {
         case SaladBowlStatus.LOBBY:
-            content = <Lobby user={user} users={new Map(users)} joinGame={joinGame} onStart={startGame}
+            content = <Lobby user={user} joinGame={joinGame} onStart={startGame}
                              onReady={updatePlayerInfo}
                              onConfigSubmit={updateGameConfig}/>
             break;
         case SaladBowlStatus.SUGGESTION:
-            content = <SuggestionPhase users={Array.from(users.values())} sendWords={suggestWords}/>
+            content = <SuggestionPhase sendWords={suggestWords}/>
+            break;
+
+        case SaladBowlStatus.PLAYING:
+            content = <PlayingPhase meID={playerID} users={new Map(users)} wordNew={wordNew} onSuccess={wordSuccess}
+                                    bowlUpdate={bowlUpdate}/>
             break;
 
         default:
-                content = <div>GameStatus: {SaladBowlStatus[status]} not implemented</div>;
+            content = <div>GameStatus: {SaladBowlStatus[status]} not implemented</div>;
     }
 
     return <div className="SaladBowl">{content}</div>
