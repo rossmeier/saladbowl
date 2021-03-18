@@ -148,7 +148,19 @@ function SaladBowl({token: gameToken}: { token?: string | null }) {
             content = <div>GameStatus: {SaladBowlStatus[status]} not implemented</div>;
     }
 
-    return <div className="SaladBowl">{content}</div>
+    return <Paper className="SaladBowl">
+        <Grid container spacing={2}>
+            <Grid item>
+                <Container>{content}</Container>
+            </Grid>
+            <Grid item>
+                <Paper>
+                    <Typography variant="subtitle2">Players</Typography>
+                    <UsersList users={Array.from(users.values())} meID={user?.id}/>
+                </Paper>
+            </Grid>
+        </Grid>
+    </Paper>
 }
 
 export default SaladBowl

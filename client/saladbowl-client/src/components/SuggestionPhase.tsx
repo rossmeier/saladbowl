@@ -1,5 +1,4 @@
-import {Button, Container, Grid, Paper, TextField, Typography} from "@material-ui/core";
-import {UsersList, UserType} from "./User";
+import {Button, Grid, TextField, Typography} from "@material-ui/core";
 import React, {useState} from "react";
 import Timer from "./Timer";
 
@@ -26,7 +25,7 @@ function SuggestWord(props: { submitWords: (args: string[]) => void, maxWords: n
 
     const wordCount = getWords().length;
     let help = '';
-    if (getWords().length > maxWords){
+    if (getWords().length > maxWords) {
         help = `To many words, first ${maxWords} will be used.`
     }
 
@@ -52,26 +51,8 @@ function SuggestWord(props: { submitWords: (args: string[]) => void, maxWords: n
     );
 }
 
-function SuggestionPhase(props: { users: UserType[], sendWords: (args: string[]) => void }) {
-    const {users} = props;
-
-    return (
-        <Paper>
-            <Grid container spacing={2}>
-                <Grid item>
-                    <Container>
-                        <SuggestWord submitWords={props.sendWords} maxWords={10} timeLeft={27}/>
-                    </Container>
-                </Grid>
-                <Grid item>
-                    <Paper>
-                        <Typography variant="subtitle2">Players</Typography>
-                        <UsersList users={Array.from(users)}/>
-                    </Paper>
-                </Grid>
-            </Grid>
-        </Paper>
-    );
+function SuggestionPhase(props: { sendWords: (args: string[]) => void }) {
+    return <SuggestWord submitWords={props.sendWords} maxWords={10} timeLeft={180}/>
 }
 
 export default SuggestionPhase;
