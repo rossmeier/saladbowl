@@ -70,7 +70,7 @@ function User(props: { user: UserType, me?: boolean }): JSX.Element {
     </Paper>
 }
 
-function UsersList(props: { users: UserType[], meID?: number }) {
+function UsersList(props: { users: UserType[], title?: string, meID?: number }) {
     const [sort, setSort] = useState(false);
 
     const {users, meID} = props;
@@ -78,16 +78,20 @@ function UsersList(props: { users: UserType[], meID?: number }) {
 
     const items = usersShown.map(user => <Grid item key={user.id}><User user={user} me={user.id === meID}/></Grid>);
 
-    if (users.length <= 0) {
+    if (usersShown.length <= 0) {
         return null
     } else {
         return <div className="UsersList">
             <Grid container spacing={2} direction="column" justify="flex-start" alignItems="stretch">
                 {items}
             </Grid>
-            {users.length > 0 ?
-                <FormControlLabel control={<Checkbox checked={sort} onChange={() => setSort(!sort)} name="sort"/>}
-                                  label="Sort by score"/> : null}
+            {
+                users.length > 0 ?
+                    <FormControlLabel control={<Checkbox checked={sort} onChange={() => setSort(!sort)} name="sort"/>}
+                                      label="Sort by score"
+                    /> :
+                    null
+            }
         </div>
     }
 
