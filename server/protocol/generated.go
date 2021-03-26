@@ -8,11 +8,12 @@ import (
 )
 
 type Player struct {
-	Name   string       `bare:"name"`
-	Team   Team         `bare:"team"`
-	Id     int          `bare:"id"`
-	Status PlayerStatus `bare:"status"`
-	Score  int          `bare:"score"`
+	Name    string       `bare:"name"`
+	Team    Team         `bare:"team"`
+	Id      int          `bare:"id"`
+	Status  PlayerStatus `bare:"status"`
+	Score   int          `bare:"score"`
+	IsOwner bool         `bare:"isOwner"`
 }
 
 func (t *Player) Decode(data []byte) error {

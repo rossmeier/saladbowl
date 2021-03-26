@@ -73,7 +73,7 @@ function PlayerConfig(props: { name: string, team: Team, teams: Team[], ready: b
 
     return (
         <Paper>
-            <Typography variant="subtitle1">User Settings</Typography>
+            <Typography variant="subtitle2">User Settings</Typography>
             <form onSubmit={handleSubmit}>
                 <Grid container direction="column" alignItems="center" spacing={1}>
                     <Grid item>
@@ -92,8 +92,9 @@ function PlayerConfig(props: { name: string, team: Team, teams: Team[], ready: b
     );
 }
 
-function GameConfig(props: { defaults: { maxWords: number, suggestionTime: number, guessingTime: number, rounds: number }, onSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
-    const [values, setValues] = useState(props.defaults);
+function GameConfig(props: { isOwner: boolean, defaults: { maxWords: number, suggestionTime: number, guessingTime: number, rounds: number }, onSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
+    const {onSubmit, defaults, isOwner} = props;
+    const [values, setValues] = useState(defaults);
 
     function errorReducer(state: { maxWords: string, suggestionTime: string, guessingTime: string, rounds: string }, action: { nam: string, val: number }): { maxWords: string; suggestionTime: string; guessingTime: string; rounds: string } {
         let msg;
@@ -119,8 +120,8 @@ function GameConfig(props: { defaults: { maxWords: number, suggestionTime: numbe
         guessingTime: guessingTimeDefault,
         rounds: roundsDefault,
         maxWords: maxWordsDefault,
-        suggestionTime: suggestionTimeDefault
-    } = props.defaults;
+        suggestionTime: suggestionTimeDefault,
+    } = defaults;
     const {guessingTime, rounds, maxWords, suggestionTime} = values;
 
 
@@ -140,7 +141,7 @@ function GameConfig(props: { defaults: { maxWords: number, suggestionTime: numbe
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (noErrors()) {
-            props.onSubmit(maxWords, suggestionTime, guessingTime, rounds);
+            onSubmit(maxWords, suggestionTime, guessingTime, rounds);
         }
     }
 
@@ -150,33 +151,47 @@ function GameConfig(props: { defaults: { maxWords: number, suggestionTime: numbe
     }
 
 
-    return <Paper>
-        <Typography variant="subtitle1">Game:</Typography>
-        <form onSubmit={handleSubmit} autoComplete="off" onError={() => console.log('error')}>
-            <TextField id="input-maxWords" label="Words to submit" type="number" name="maxWords"
-                       required fullWidth
-                       value={maxWords ?? ''} onChange={handleChange} placeholder={maxWordsDefault + ''}
-                       error={errors.maxWords !== ''} helperText={errors.maxWords}/>
-            <br/>
-            <TextField id="input-suggestionTime" label="Suggestion Time" type="number" name="suggestionTime"
-                       required fullWidth InputProps={{endAdornment: iaSeconds}}
-                       value={suggestionTime ?? ''} onChange={handleChange}
-                       placeholder={suggestionTimeDefault + ''}
-                       error={errors.suggestionTime !== ''} helperText={errors.suggestionTime}/>
-            <br/>
-            <TextField id="input-guessingTime" label="Time to guess" type="number" name="guessingTime"
-                       required fullWidth disabled InputProps={{endAdornment: iaSeconds}}
-                       value={guessingTime ?? ''} onChange={handleChange} placeholder={guessingTimeDefault + ''}
-                       error={errors.guessingTime !== ''} helperText={errors.guessingTime}/>
-            <br/>
-            <TextField id="input-rounds" label="Rounds to play" type="number" name="rounds"
-                       required fullWidth
-                       value={rounds ?? ''} onChange={handleChange} placeholder={roundsDefault + ''}
-                       error={errors.rounds !== ''} helperText={errors.rounds}/>
-            <br/>
-            <Button type="submit" disabled={buttonDisabled() || !noErrors()}>Set</Button>
-        </form>
-    </Paper>
+    return (
+        <Paper>
+            <Typography variant="subtitle2">Game Config</Typography>
+            <form onSubmit={handleSubmit} autoComplete="off" onError={() => console.log('error')}>
+                <Grid container direction="column">
+                    <Grid item>
+                        <TextField id="input-maxWords" label="Words to submit" type={isOwner ? "number" : undefined}
+                                   name="maxWords"
+                                   required disabled={!isOwner}
+                                   value={maxWords ?? ''} onChange={handleChange} placeholder={maxWordsDefault + ''}
+                                   error={errors.maxWords !== ''} helperText={errors.maxWords}/>
+                    </Grid>
+                    <TextField id="input-suggestionTime" label="Suggestion Time" type={isOwner ? "number" : undefined}
+                               name="suggestionTime"
+                               required disabled={!isOwner}
+                               value={suggestionTime ?? ''} onChange={handleChange}
+                               placeholder={suggestionTimeDefault + ''}
+                               error={errors.suggestionTime !== ''} helperText={errors.suggestionTime}/>
+                    <Grid item>
+                        <TextField id="input-guessingTime" label="Time to guess" type={isOwner ? "number" : undefined}
+                                   name="guessingTime"
+                                   required disabled
+                                   value={guessingTime ?? ''} onChange={handleChange}
+                                   placeholder={guessingTimeDefault + ''}
+                                   error={errors.guessingTime !== ''} helperText={errors.guessingTime}/>
+                    </Grid>
+                    <TextField id="input-rounds" label="Rounds to play" type={isOwner ? "number" : undefined}
+                               name="rounds"
+                               required disabled={!isOwner}
+                               value={rounds ?? ''} onChange={handleChange} placeholder={roundsDefault + ''}
+                               error={errors.rounds !== ''} helperText={errors.rounds}/>
+                    {isOwner ?
+                        <Grid item>
+                            <Button type="submit" disabled={buttonDisabled() || !noErrors()}>Set</Button>
+                        </Grid>
+                        : null}
+                </Grid>
+            </form>
+        </Paper>
+    )
+        ;
 }
 
 function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: string, team: Team) => void, onStart: () => void, onConfigSubmit: (maxWords: number, suggestionTime: number, guessingTime: number, rounds: number) => void }) {
@@ -202,13 +217,10 @@ function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: str
         <Box>
             <Typography variant="subtitle1">Lobby</Typography>
             <Grid container className="PlayerLobby" direction="column" spacing={2}>
-                {user.owner ?
-                    <Grid item>
-                        <GameConfig defaults={{guessingTime: 30, maxWords: 15, suggestionTime: 180, rounds: 3}}
-                                    onSubmit={props.onConfigSubmit}/>
-                    </Grid> :
-                    null
-                }
+                <Grid item>
+                    <GameConfig defaults={{guessingTime: 30, maxWords: 15, suggestionTime: 180, rounds: 3}}
+                                onSubmit={props.onConfigSubmit} isOwner={user.isOwner}/>
+                </Grid>
                 <Grid item>
                     <Paper>
                         <PlayerConfig name={name} team={team} teams={teams} ready={ready}
@@ -216,7 +228,7 @@ function PlayerLobby(props: { user: UserType, teams: Team[], onReady: (name: str
                         />
                     </Paper>
                 </Grid>
-                <Button onClick={handleStart}>StartGame</Button>
+                {user.isOwner ? <Button onClick={handleStart}>StartGame</Button> : null}
             </Grid>
         </Box>
     );
