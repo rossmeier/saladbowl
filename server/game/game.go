@@ -173,6 +173,7 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 		Token:    token,
 		PlayerID: id,
 	}))
+	orig.Reply(encode(g.state))
 	g.broadcastPlayerList()
 	return nil
 }
