@@ -310,6 +310,7 @@ func (g *Game) handleWordSuccess(msg *protocol.WordSuccess, orig message.ToServe
 		return errors.New("Invalid token")
 	}
 	g.currentPlayer.Score++
+	g.lastWordToken = ""
 	g.broadcastPlayerList()
 	g.nextWord()
 	return nil
