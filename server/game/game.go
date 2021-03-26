@@ -222,6 +222,7 @@ func (g *Game) nextWord() {
 func (g *Game) nextPlayer() {
 	if len(g.bowlCurrent) == 0 {
 		g.startRound()
+		return
 	}
 
 	// decide the team of the next player
