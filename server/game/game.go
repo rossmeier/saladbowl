@@ -144,10 +144,20 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 	}
 	id := len(g.players)
 	token := genToken()
-	team := protocol.Red
-	if rand.Intn(2) == 0 {
-		team = protocol.Blue
+
+	playersPerTeam := make(map[protocol.Team]int)
+	for _, p := range g.players {
+		playersPerTeam[p.Team]++
 	}
+	team := protocol.Red
+	teamPlayers := 100000
+	for _, t := range []protocol.Team{protocol.Blue, protocol.Red} {
+		if playersPerTeam[t] < teamPlayers {
+			team = t
+			teamPlayers = playersPerTeam[t]
+		}
+	}
+
 	g.players = append(g.players, &player{
 		Player: &protocol.Player{
 			Name:   msg.Name,
