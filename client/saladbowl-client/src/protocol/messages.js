@@ -2,8 +2,8 @@ import {mapEnum,mapUnion,BareUInt,BareInt,BareU8,BareU16,BareU32,BareU64,BareI8,
 	from './bare.js';
 class PlayerStatus extends BareEnum {static keys = mapEnum(this, {0:'Active',1:'Passive',2:'Disconnected'});}
 class Team extends BareEnum {static keys = mapEnum(this, {0:'Red',1:'Blue'});}
-class Player extends BareStruct {static entries = [['name',BareString],['team',Team],['id',BareInt],['status',PlayerStatus],['score',BareInt]];}
-class GameConfig extends BareStruct {static entries = [['maxWords',BareInt],['suggestionTime',BareInt],['rounds',BareInt],['teams',class extends BareArray {static type = Team;}]];}
+class Player extends BareStruct {static entries = [['name',BareString],['team',Team],['id',BareInt],['status',PlayerStatus],['score',BareInt],['isOwner',BareBool]];}
+class GameConfig extends BareStruct {static entries = [['maxWords',BareInt],['suggestionTime',BareInt],['rounds',BareInt]];}
 class ClientHello extends BareStruct {static entries = [['name',BareString],['token',class extends BareOptional {static type = BareString;}]];}
 class StartGame extends BareVoid {}
 class UpdatePlayerInfo extends BareStruct {static entries = [['name',class extends BareOptional {static type = BareString;}],['team',class extends BareOptional {static type = Team;}]];}

@@ -27,7 +27,8 @@ type PlayerValue = {
     team: Team,
     id: BigInt,
     status: PlayerStatus,
-    score: number
+    score: number,
+    isOwner: boolean,
 }
 
 
