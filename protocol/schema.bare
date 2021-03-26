@@ -15,6 +15,7 @@ type Player {
     id: int
     status: PlayerStatus
     score: int
+    isOwner: bool
 }
 
 type GameConfig {

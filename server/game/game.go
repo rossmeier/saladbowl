@@ -146,8 +146,12 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 	token := genToken()
 
 	playersPerTeam := make(map[protocol.Team]int)
+	makeOwner := true
 	for _, p := range g.players {
 		playersPerTeam[p.Team]++
+		if p.IsOwner {
+			makeOwner = false
+		}
 	}
 	team := protocol.Red
 	teamPlayers := 100000
@@ -160,11 +164,12 @@ func (g *Game) handleClientHello(msg *protocol.ClientHello, orig message.ToServe
 
 	g.players = append(g.players, &player{
 		Player: &protocol.Player{
-			Name:   msg.Name,
-			Id:     id,
-			Score:  0,
-			Status: protocol.Passive,
-			Team:   team,
+			Name:    msg.Name,
+			Id:      id,
+			Score:   0,
+			Status:  protocol.Passive,
+			Team:    team,
+			IsOwner: makeOwner,
 		},
 		connection: orig.ClientID,
 		token:      token,
@@ -321,6 +326,9 @@ func (g *Game) handleWordSuccess(msg *protocol.WordSuccess, orig message.ToServe
 func (g *Game) handleStartGame(orig message.ToServerMsg) error {
 	if g.getPlayerByClientID(orig.ClientID) == nil {
 		return ErrNotJoined
+	}
+	if !g.getPlayerByClientID(orig.ClientID).IsOwner {
+		return errors.New("only owner can start game")
 	}
 	if g.state != protocol.Lobby {
 		return errors.New("Can only start game from lobby phase")
